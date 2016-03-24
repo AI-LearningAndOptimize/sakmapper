@@ -8,4 +8,5 @@ setup(name='sakmapper',
       author_email='szairis@gmail.com',
       license='MIT',
       packages=['sakmapper'],
+      install_requires=['numpy','scipy','pandas','scikit-learn','networkx'],
       zip_safe=False)
