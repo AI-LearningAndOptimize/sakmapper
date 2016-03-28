@@ -27,7 +27,7 @@ def covering_patches(lens_data, resolution=10, gain=0.5, equalize=True):
     xmin, xmax = lens_data[cols[0]].min(), lens_data[cols[0]].max()
     ymin, ymax = lens_data[cols[1]].min(), lens_data[cols[1]].max()
     patch_dict = {}
-    
+
     if equalize == True:
         perc_step = 100.0 / resolution
         fence_posts_x = [np.percentile(lens_data[cols[0]], post) for post in np.arange(perc_step, 100, perc_step)]
@@ -37,7 +37,7 @@ def covering_patches(lens_data, resolution=10, gain=0.5, equalize=True):
         upper_bound_x = np.array(fence_posts_x + [xmax])
         lower_bound_y = np.array([ymin] + fence_posts_y)
         upper_bound_y = np.array(fence_posts_y + [ymax])
-        
+
         widths_x = upper_bound_x - lower_bound_x
         spill_over_x = gain * widths_x
         lower_bound_x = lower_bound_x - spill_over_x
@@ -46,7 +46,7 @@ def covering_patches(lens_data, resolution=10, gain=0.5, equalize=True):
         spill_over_y = gain * widths_y
         lower_bound_y = lower_bound_y - spill_over_y
         upper_bound_y = upper_bound_y + spill_over_y
-        
+
         for i in range(resolution):
             for j in range(resolution):
                 patch = list(lens_data[(lens_data[cols[0]] > lower_bound_x[i]) &
@@ -58,7 +58,7 @@ def covering_patches(lens_data, resolution=10, gain=0.5, equalize=True):
                     (round(lower_bound_y[j], 2), round(upper_bound_y[j], 2)))
                 patch_dict[key] = patch
         return patch_dict
-    
+
     else:
         width_x = (xmax - xmin) / resolution
         width_y = (ymax - ymin) / resolution
@@ -82,8 +82,10 @@ def covering_patches(lens_data, resolution=10, gain=0.5, equalize=True):
         return patch_dict
 
 
-def optimal_clustering(df, patch, method='kmeans', min_patch_N=50):
-    K_max = int(min_patch_N / 10)
+def optimal_clustering(df, patch, method='kmeans', max_K=10):
+    K_max = min(len(patch), max_K)
+    if len(patch) == 1:
+        return [patch]
     if method == 'kmeans':
         clustering = {}
         db_index = []
@@ -100,7 +102,7 @@ def optimal_clustering(df, patch, method='kmeans', min_patch_N=50):
         db_index = np.array(db_index[1:])
         k_optimal = np.argmin(db_index) + 2
         return [list(clustering[k_optimal][clustering[k_optimal][0] == i].index) for i in range(k_optimal)]
-    
+
     elif method == 'agglomerative':
         clustering = {}
         db_index = []
@@ -119,23 +121,24 @@ def optimal_clustering(df, patch, method='kmeans', min_patch_N=50):
         db_index = np.array(db_index[1:])
         k_optimal = np.argmin(db_index) + 2
         return [list(clustering[k_optimal][clustering[k_optimal][0] == i].index) for i in range(k_optimal)]
-    
+
     else:
         raise 'error: only k-means and agglomerative clustering are supported'
 
 
-def mapper_graph(df, lens='pca', resolution=10, gain=0.5, equalize=True, clust='kmeans', min_patch_occupancy=50):
+def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equalize=True, clust='kmeans', max_K=10):
     '''
     input: N x n_dim image of of raw data under lens function, as a dataframe
-    output: (undirected graph, list of node contents) 
+    output: (undirected graph, list of node contents)
     '''
-    lens_data = apply_lens(df, lens=lens)
-    
+    if lens_data is None:
+        lens_data = apply_lens(df, lens=lens)
+
     patch_clusterings = {}
     counter = 0
     for key, patch in covering_patches(lens_data, resolution=resolution, gain=gain, equalize=equalize).items():
-        if len(patch) > min_patch_occupancy:
-            patch_clusterings[key] = optimal_clustering(df, patch, method=clust, min_patch_N=min_patch_occupancy)
+        if len(patch) > 0:
+            patch_clusterings[key] = optimal_clustering(df, patch, method=clust, max_K=max_K)
             counter += 1
     print 'total of {} patches required clustering'.format(counter)
 
@@ -144,7 +147,7 @@ def mapper_graph(df, lens='pca', resolution=10, gain=0.5, equalize=True, clust='
         all_clusters += patch_clusterings[key]
     num_nodes = len(all_clusters)
     print 'this implies {} nodes in the mapper graph'.format(num_nodes)
-    
+
     A = np.zeros((num_nodes, num_nodes))
     for i in range(num_nodes):
         for j in range(i):
@@ -152,8 +155,6 @@ def mapper_graph(df, lens='pca', resolution=10, gain=0.5, equalize=True, clust='
             if len(overlap) > 0:
                 A[i,j] = 1
                 A[j,i] = 1
-    
+
     G = nx.from_numpy_matrix(A)
     return G, all_clusters
-
-
