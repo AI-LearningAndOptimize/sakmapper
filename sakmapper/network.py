@@ -82,7 +82,7 @@ def covering_patches(lens_data, resolution=10, gain=0.5, equalize=True):
         return patch_dict
 
 
-def optimal_clustering(df, patch, method='kmeans', max_K=10):
+def optimal_clustering(df, patch, method='kmeans', max_K=5):
     K_max = min(len(patch), max_K)
     if len(patch) == 1:
         return [patch]
@@ -126,7 +126,7 @@ def optimal_clustering(df, patch, method='kmeans', max_K=10):
         raise 'error: only k-means and agglomerative clustering are supported'
 
 
-def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equalize=True, clust='kmeans', max_K=10):
+def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equalize=True, clust='kmeans', max_K=5):
     '''
     input: N x n_dim image of of raw data under lens function, as a dataframe
     output: (undirected graph, list of node contents)
