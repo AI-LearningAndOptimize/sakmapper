@@ -83,14 +83,19 @@ def covering_patches(lens_data, resolution=10, gain=0.5, equalize=True):
 
 
 def optimal_clustering(df, patch, method='kmeans', max_K=5):
-    K_max = min(len(patch), max_K)
     if len(patch) == 1:
         return [patch]
+
+    if len(patch) <= 5:
+        K_max = 2
+    else:
+        K_max = min(len(patch) / 2, max_K)
+
     if method == 'kmeans':
         clustering = {}
         db_index = []
         X = df.ix[patch,:]
-        for k in range(1, K_max):
+        for k in range(2, K_max + 1):
             kmeans = cluster.KMeans(n_clusters=k).fit(X)
             clustering[k] = pd.DataFrame(kmeans.predict(X), index=patch)
             dist_mu = squareform(pdist(kmeans.cluster_centers_))
@@ -99,7 +104,7 @@ def optimal_clustering(df, patch, method='kmeans', max_K=5):
                 points_in_cluster = clustering[k][clustering[k][0] == i].index
                 sigma.append(sqrt(X.ix[points_in_cluster,:].var(axis=0).sum()))
             db_index.append(davies_bouldin(dist_mu, np.array(sigma)))
-        db_index = np.array(db_index[1:])
+        db_index = np.array(db_index)
         k_optimal = np.argmin(db_index) + 2
         return [list(clustering[k_optimal][clustering[k_optimal][0] == i].index) for i in range(k_optimal)]
 
@@ -107,7 +112,7 @@ def optimal_clustering(df, patch, method='kmeans', max_K=5):
         clustering = {}
         db_index = []
         X = df.ix[patch,:]
-        for k in range(1, K_max):
+        for k in range(2, K_max + 1):
             agglomerative = cluster.AgglomerativeClustering(n_clusters=k, linkage='average').fit(X)
             clustering[k] = pd.DataFrame(agglomerative.fit_predict(X), index=patch)
             tmp = [list(clustering[k][clustering[k][0] == i].index) for i in range(k)]
@@ -118,7 +123,7 @@ def optimal_clustering(df, patch, method='kmeans', max_K=5):
                 points_in_cluster = clustering[k][clustering[k][0] == i].index
                 sigma.append(sqrt(X.ix[points_in_cluster,:].var(axis=0).sum()))
             db_index.append(davies_bouldin(dist_mu, np.array(sigma)))
-        db_index = np.array(db_index[1:])
+        db_index = np.array(db_index)
         k_optimal = np.argmin(db_index) + 2
         return [list(clustering[k_optimal][clustering[k_optimal][0] == i].index) for i in range(k_optimal)]
 
