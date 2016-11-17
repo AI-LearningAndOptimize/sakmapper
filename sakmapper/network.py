@@ -202,4 +202,18 @@ def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equali
                 A[j, i] = 1
 
     G = nx.from_numpy_matrix(A)
-    return G, all_clusters
+    total = []
+    all_clusters_new = []
+    mapping = {}
+    cont = 0
+    for m in all_clusters:
+        total += m
+    for n, m in enumerate(all_clusters):
+        if len(m) == 1 and total.count(m) > 1:
+            G.remove_node(n)
+        else:
+            all_clusters_new.append(m)
+            mapping[n] = cont
+            cont += 1
+    H = nx.relabel_nodes(G, mapping)
+    return H, all_clusters_new
