@@ -174,14 +174,15 @@ def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equali
                  max_K=5):
     """
     input: N x n_dim image of of raw data under lens function, as a dataframe
-    output: (undirected graph, list of node contents)
+    output: (undirected graph, list of node contents, dictionary of patches)
     """
     if lens_data is None:
         lens_data = apply_lens(df, lens=lens)
 
     patch_clusterings = {}
     counter = 0
-    for key, patch in covering_patches(lens_data, resolution=resolution, gain=gain, equalize=equalize).items():
+    patches = covering_patches(lens_data, resolution=resolution, gain=gain, equalize=equalize)
+    for key, patch in patches.items():
         if len(patch) > 0:
             patch_clusterings[key] = optimal_clustering(df, patch, method=clust, statistic=stat, max_K=max_K)
             counter += 1
@@ -216,4 +217,4 @@ def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equali
             mapping[n] = cont
             cont += 1
     H = nx.relabel_nodes(G, mapping)
-    return H, all_clusters_new
+    return H, all_clusters_new, patches
