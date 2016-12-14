@@ -1,7 +1,7 @@
 from setuptools import setup
 
 setup(name='sakmapper',
-      version='0.2',
+      version='0.3',
       description='implementation of the mapper algorithm',
       url='https://github.com/szairis/sakmapper',
       author='sakellarios zairis',
