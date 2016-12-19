@@ -25,7 +25,9 @@ The core functions of sakmapper are meant to be imported from the module into yo
 from sakmapper import apply_lens, mapper_graph
 ```
 
-A data set of dimension N rows x F features will first be passed through a lens function to yield an N x 2 projection. Next, a mapper graph can be constructed by specifying the set covering of the lensed data, as well as the clustering approach.
+A data set of dimension N rows x F features will first be passed through a lens function to yield an N x 2 projection. Next, a mapper graph can be constructed by specifying the set covering of the lensed data, as well as the clustering approach. Because calculating the projection of the initial data set under the lens function is expensive, we encourage this computation upfront and invoking the mapper_graph routine with the lens_data keyword argument. Other keyword arguments of the mapper_graph routine pertain to the set covering (equalize, resolution, gain) or the clustering approach (clust, maxK, stat).
+
+The default optimal clustering heuristic (stat='db') is the Davies-Bouldin index, an easily computed quantity. Switching to the gap statistic (stat='gap') of Tibshirani, Walther, and Hastie incurs greater computational overhead, but in our limited experience can produce better resolved mapper graphs.
 
 **Notes**
 

@@ -170,7 +170,7 @@ def optimal_clustering(df, patch, method='kmeans', statistic='gap', max_K=5):
         raise 'error: only db and gat statistics are supported'
 
 
-def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equalize=True, clust='kmeans', stat='gap',
+def mapper_graph(df, lens_data=None, lens='pca', resolution=10, gain=0.5, equalize=True, clust='kmeans', stat='db',
                  max_K=5):
     """
     input: N x n_dim image of of raw data under lens function, as a dataframe
